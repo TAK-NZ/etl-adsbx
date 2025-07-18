@@ -290,13 +290,14 @@ export default class Task extends ETL {
             // https://tak.gov/public-safety-air-icons/
             // This is used to display different icons for different types of public safety aircraft    
             const feat = ids.get(id);
-            if (ac.group && ac.group !== 'UNKNOWN' && ac.group !== 'None' && env.ADSBX_INCLUDES_ICON) {
-                feat.properties.icon = '66f14976-4b62-4023-8edb-d8d2ebeaa336/Public Safety Air/' + ac.group + '.png';
+            if (ac.group && ac.group.trim() !== 'UNKNOWN' && ac.group.trim() !== 'None' && env.ADSBX_INCLUDES_ICON) {
                 // If the group starts with 'a-', it's a military symbol code (e.g., a-f-A-M-F-R), so use it directly as the type
                 // This allows proper military symbology to be displayed in TAK
-                if (ac.group && ac.group.startsWith('a-')) {
-                    feat.properties.type = ac.group;
+                if (ac.group && ac.group.trim().startsWith('a-')) {
+                    feat.properties.type = ac.group.trim();
                 }
+                feat.properties.icon = '66f14976-4b62-4023-8edb-d8d2ebeaa336/Public Safety Air/' + ac.group.trim() + '.png';
+                
             }
         }
 
