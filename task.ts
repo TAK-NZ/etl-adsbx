@@ -297,7 +297,6 @@ export default class Task extends ETL {
                     feat.properties.type = ac.group.trim();
                 }
                 feat.properties.icon = '66f14976-4b62-4023-8edb-d8d2ebeaa336/Public Safety Air/' + ac.group.trim() + '.png';
-                
             }
         }
 
