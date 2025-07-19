@@ -3,11 +3,11 @@ import { fetch } from '@tak-ps/etl'
 import ETL, { Event, SchemaType, handler as internal, local, InvocationType, DataFlowType, InputFeatureCollection } from '@tak-ps/etl';
 
 const Env = Type.Object({
-    'Query LatLon': Type.String({
+    'Query_LatLon': Type.String({
         description: 'Lat, Lon value to use for centering the API request',
         default: '40.14401,-119.81204'
     }),
-    'Query Dist': Type.String({
+    'Query_Dist': Type.String({
         description: 'Distance from the provided Lat, Lon location in nautical miles (NM) to provide results',
         default: "2650"
     }),
@@ -18,16 +18,16 @@ const Env = Type.Object({
         ],
         default: 'https://adsbexchange.com/api/aircraft'
     }),
-    'ADSBX_TOKEN': Type.String({ description: 'API Token for ADSBExchange' }),
-    'ADSBX_INCLUDES_FILTERING': Type.Boolean({
-        description: 'Only show aircraft from the ADSBX_INCLUDES list. This is useful for filtering out large amounts of aircraft in an area.',
+    'ADSBX_Token': Type.String({ description: 'API Token for ADSBExchange' }),
+    'ADSBX_Filtering': Type.Boolean({
+        description: 'Only show aircraft from the ADSBX_Includes list. This is useful for filtering out large amounts of aircraft in an area.',
         default: true
     }),
-    'ADSBX_INCLUDES_ICON': Type.Boolean({ 
-        description: 'Change aircraft icon based on the group provided in ADSBX_INCLUDES, even when filtering is disabled.',
+    'ADSBX_Use_Icon': Type.Boolean({ 
+        description: 'Change aircraft icon based on the group provided in ADSBX_Includes, even when filtering is disabled.',
         default: true
     }),
-    'ADSBX_INCLUDES': Type.Array(Type.Object({
+    'ADSBX_Includes': Type.Array(Type.Object({
         domain: Type.String({
             description: 'Public Safety domain of the Aircraft',
             enum: ['EMS', 'FIRE', 'LAW', 'FED', 'MIL'],
@@ -93,11 +93,11 @@ const Env = Type.Object({
             ]
         }),
     })),
-    'ADSBX_EMERGENCY_HOSTILE': Type.Boolean({ 
+    'ADSBX_Emergency_Hostile': Type.Boolean({ 
         description: 'Mark flights in status "emergency" as "hostile". This allows them to appear in red on a TAK map.', 
         default: false 
     }),
-    'PUBSAFETY_ICONS_FOR_MILITARY': Type.Boolean({ 
+    'PubSafety_Icons_for_Military': Type.Boolean({ 
         description: 'Use public safety icons instead of general MIL-STD-2525 icons for military planes.', 
         default: false 
     }),
@@ -123,7 +123,7 @@ const ADSBResponse = Type.Object({
     type: Type.String(),
     group: Type.Optional(Type.String({
         default: 'None',
-        description: 'Provided by the join with ADSBX_INCLUDES items'
+        description: 'Provided by the join with ADSBX_Includes items'
     })),
     flight: Type.Optional(Type.String()),
     r: Type.Optional(Type.String()),
@@ -170,16 +170,16 @@ export default class Task extends ETL {
     async control() {
         const env = await this.env(Env);
 
-        const api = `${env.ADSBX_API}/v2/lat/${env['Query LatLon'].split(',')[0].trim()}/lon/${env['Query LatLon'].split(',')[1].trim()}/dist/${env['Query Dist']}/`;
+        const api = `${env.ADSBX_API}/v2/lat/${env['Query_LatLon'].split(',')[0].trim()}/lon/${env['Query_LatLon'].split(',')[1].trim()}/dist/${env['Query_Dist']}/`;
 
         const url = new URL(api);
-        url.searchParams.append('apiKey', env.ADSBX_TOKEN);
+        url.searchParams.append('apiKey', env.ADSBX_Token);
         url.searchParams.append('cacheBuster', String(new Date().getTime()));
 
         const res = await fetch(url, {
             headers: {
-                'x-rapidapi-key': env.ADSBX_TOKEN,
-                'api-auth': env.ADSBX_TOKEN
+                'x-rapidapi-key': env.ADSBX_Token,
+                'api-auth': env.ADSBX_Token
             }
         });
 
@@ -252,11 +252,11 @@ export default class Task extends ETL {
 
             // Determine whether the aircraft is in emergency mode (show in red aka. "hostile") or not
             // https://www.adsbexchange.com/version-2-api-wip/
-            if (ac.emergency !== undefined && ac.emergency !== 'none' && env.ADSBX_EMERGENCY_HOSTILE) {
+            if (ac.emergency !== undefined && ac.emergency !== 'none' && env.ADSBX_Emergency_Hostile) {
                 ac_affiliation = '-h'; // Emergency
             }
 
-            for (const include of env.ADSBX_INCLUDES) {
+            for (const include of env.ADSBX_Includes) {
                 const markup = include.registration.toLowerCase().trim();
                 if (id == markup) {
                     ac.group = include.group;
@@ -294,12 +294,12 @@ export default class Task extends ETL {
             // https://tak.gov/public-safety-air-icons/
             // This is used to display different icons for different types of public safety aircraft    
             const feat = ids.get(id);
-            if (ac.group && ac.group.trim() !== 'UNKNOWN' && ac.group.trim() !== 'None' && env.ADSBX_INCLUDES_ICON) {
+            if (ac.group && ac.group.trim() !== 'UNKNOWN' && ac.group.trim() !== 'None' && env.ADSBX_Use_Icon) {
                 // If the group starts with 'a-', it's a military symbol code (e.g., a-f-A-M-F-R), so use it directly as the type
                 // This allows proper military symbology to be displayed in TAK
                 if (ac.group && ac.group.trim().startsWith('a-')) {
                     feat.properties.type = ac.group.trim();
-                    if (env.PUBSAFETY_ICONS_FOR_MILITARY) {
+                    if (env.PubSafety_Icons_for_Military) {
                         feat.properties.icon = '66f14976-4b62-4023-8edb-d8d2ebeaa336/Public Safety Air/' + ac.group.trim() + '.png';
                     } 
                 } else {
@@ -311,8 +311,8 @@ export default class Task extends ETL {
         const features = [];
         const features_ids = new Set();
 
-        if (env.ADSBX_INCLUDES_FILTERING) {
-            for (const include of env.ADSBX_INCLUDES) {
+        if (env.ADSBX_Filtering) {
+            for (const include of env.ADSBX_Includes) {
                 const id = include.registration.toLowerCase().trim();
 
                 if (ids.has(id)) {
