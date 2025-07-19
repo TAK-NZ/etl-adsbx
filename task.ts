@@ -2,6 +2,9 @@ import { Static, Type, TSchema } from '@sinclair/typebox';
 import { fetch } from '@tak-ps/etl'
 import ETL, { Event, SchemaType, handler as internal, local, InvocationType, DataFlowType, InputFeatureCollection } from '@tak-ps/etl';
 
+// Constant for Public Safety Air icon set path
+const PUBLIC_SAFETY_AIR_ICON_PATH = '66f14976-4b62-4023-8edb-d8d2ebeaa336/Public Safety Air/';
+
 const Env = Type.Object({
     'Query_LatLon': Type.String({
         description: 'Lat, Lon value to use for centering the API request',
@@ -176,17 +179,32 @@ export default class Task extends ETL {
         url.searchParams.append('apiKey', env.ADSBX_Token);
         url.searchParams.append('cacheBuster', String(new Date().getTime()));
 
-        const res = await fetch(url, {
-            headers: {
-                'x-rapidapi-key': env.ADSBX_Token,
-                'api-auth': env.ADSBX_Token
+        let body;
+        try {
+            const res = await fetch(url, {
+                headers: {
+                    'x-rapidapi-key': env.ADSBX_Token,
+                    'api-auth': env.ADSBX_Token
+                }
+            });
+            
+            if (!res.ok) {
+                throw new Error(`ADSBX API returned status ${res.status}: ${res.statusText}`);
             }
-        });
-
-        const body = await res.typed(Type.Object({
-            msg: Type.String(),
-            ac: Type.Array(ADSBResponse)
-        }));
+            
+            body = await res.typed(Type.Object({
+                msg: Type.String(),
+                ac: Type.Array(ADSBResponse)
+            }));
+        } catch (error) {
+            console.error(`Error fetching ADSBX data: ${error.message}`);
+            // Return empty feature collection on error
+            await this.submit({
+                type: 'FeatureCollection',
+                features: []
+            });
+            return;
+        }
 
         const ids = new Map();
 
@@ -230,7 +248,7 @@ export default class Task extends ETL {
             // Based on the ICAO Hex code, which is a 6-character alphanumeric code assigned to each aircraft
             // https://www.aerotransport.org/html/ICAO_hex_decode.html
             let ac_affiliation = '-f'; // Friendly (Local)
-            if (ac.hex.toLowerCase().trim() >= env.ADSBX_ICAOHex_Domestic_Start.toLowerCase().trim() &&
+            if (ac.hex && ac.hex.toLowerCase().trim() >= env.ADSBX_ICAOHex_Domestic_Start.toLowerCase().trim() &&
                 ac.hex.toLowerCase().trim() <= env.ADSBX_ICAOHex_Domestic_End.toLowerCase().trim()) {
                 ac_affiliation = '-f'; // Friendly (Local civilian)
             } else {
@@ -242,7 +260,7 @@ export default class Task extends ETL {
             let ac_civmil = '-C'; // Civilian
             if (ac.dbFlags !== undefined && ac.dbFlags % 2 !== 0) {
                 ac_civmil = '-M'; // Military
-                if (ac.hex.toLowerCase().trim() >= env.ADSBX_ICAOHex_Domestic_Start.toLowerCase().trim() &&
+                if (ac.hex && ac.hex.toLowerCase().trim() >= env.ADSBX_ICAOHex_Domestic_Start.toLowerCase().trim() &&
                 ac.hex.toLowerCase().trim() <= env.ADSBX_ICAOHex_Domestic_End.toLowerCase().trim()) {
                     ac_affiliation = '-f'; // Friendly (Local Military)
                 } else {
@@ -256,11 +274,17 @@ export default class Task extends ETL {
                 ac_affiliation = '-h'; // Emergency
             }
 
+            // Create a lookup map for registrations (optimization for issue #8)
+            const includesMap = new Map();
             for (const include of env.ADSBX_Includes) {
-                const markup = include.registration.toLowerCase().trim();
-                if (id == markup) {
-                    ac.group = include.group;
-                }
+                if (!include.registration) continue;
+                includesMap.set(include.registration.toLowerCase().trim(), include);
+            }
+            
+            // Check if this aircraft is in our includes list
+            const include = includesMap.get(id);
+            if (include) {
+                ac.group = include.group;
             }
 
             ids.set(id, {
@@ -271,8 +295,8 @@ export default class Task extends ETL {
                     callsign: (ac.flight || '').trim(),
                     time: new Date(),
                     start: new Date(),
-                    speed: ac.gs * 0.514444 || 0,
-                    course: ac.track || 9999999.0,
+                    speed: (typeof ac.gs === 'number' ? ac.gs * 0.514444 : 0),
+                    course: (typeof ac.track === 'number' ? ac.track : 9999999.0),
                     metadata: ac,
                     remarks: [
                         'Flight: ' + (ac.flight || 'Unknown').trim(),
@@ -300,10 +324,10 @@ export default class Task extends ETL {
                 if (ac.group && ac.group.trim().startsWith('a-')) {
                     feat.properties.type = ac.group.trim();
                     if (env.PubSafety_Icons_for_Military) {
-                        feat.properties.icon = '66f14976-4b62-4023-8edb-d8d2ebeaa336/Public Safety Air/' + ac.group.trim() + '.png';
+                        feat.properties.icon = PUBLIC_SAFETY_AIR_ICON_PATH + ac.group.trim() + '.png';
                     } 
                 } else {
-                    feat.properties.icon = '66f14976-4b62-4023-8edb-d8d2ebeaa336/Public Safety Air/' + ac.group.trim() + '.png';
+                    feat.properties.icon = PUBLIC_SAFETY_AIR_ICON_PATH + ac.group.trim() + '.png';
                 }
             }
         }
@@ -312,17 +336,23 @@ export default class Task extends ETL {
         const features_ids = new Set();
 
         if (env.ADSBX_Filtering) {
+            // Reuse the same lookup map pattern for filtering
+            const includesMap = new Map();
             for (const include of env.ADSBX_Includes) {
-                const id = include.registration.toLowerCase().trim();
-
+                if (!include.registration) continue;
+                includesMap.set(include.registration.toLowerCase().trim(), include);
+            }
+            
+            // Process only aircraft that are in our includes list
+            for (const [id, include] of includesMap.entries()) {
                 if (ids.has(id)) {
                     const feat = ids.get(id);
 
-                    if (include.callsign) {
+                    if (include && include.callsign) {
                         feat.properties.callsign = include.callsign;
                     }
 
-                    if (include.group) {
+                    if (include && include.group) {
                         feat.properties.metadata.group = include.group;
                     }
 
