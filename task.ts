@@ -321,8 +321,22 @@ export default class Task extends ETL {
                 ac.group = include.group;
             }
 
+            // Define interface for feature properties with optional detail field
+            interface FeatureProperties {
+                type: string;
+                callsign: string;
+                time: Date;
+                start: Date;
+                speed: number;
+                course: number;
+                metadata: typeof ac;
+                remarks: string;
+                detail?: { alert: string };
+                icon?: string;
+            }
+            
             // Prepare the feature properties
-            const properties = {
+            const properties: FeatureProperties = {
                 type: 'a' + ac_affiliation + '-A' + ac_civmil + ac_type,
                 callsign: (ac.flight || '').trim(),
                 time: new Date(),
