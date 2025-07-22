@@ -212,6 +212,7 @@ const Env = Type.Object({
  * This schema has been enhanced to properly validate all fields used in the code
  * to prevent potential runtime errors.
  */
+// Define a more flexible schema for ADSBExchange API responses
 const ADSBResponse = Type.Object({
     // Required fields
     hex: Type.String({
@@ -276,6 +277,9 @@ const ADSBResponse = Type.Object({
     baro_rate: Type.Optional(Type.Number({
         description: 'Rate of climb/descent in feet per minute'
     })),
+    geom_rate: Type.Optional(Type.Number({
+        description: 'Geometric rate of climb/descent in feet per minute'
+    })),
     squawk: Type.Optional(Type.String({
         description: 'Transponder code (octal)',
         default: ''
@@ -296,6 +300,84 @@ const ADSBResponse = Type.Object({
     })),
     nav_heading: Type.Optional(Type.Number({
         description: 'Selected heading in degrees'
+    })),
+    nav_modes: Type.Optional(Type.Array(Type.String(), {
+        description: 'Navigation modes active on the aircraft'
+    })),
+    ias: Type.Optional(Type.Number({
+        description: 'Indicated airspeed in knots'
+    })),
+    tas: Type.Optional(Type.Number({
+        description: 'True airspeed in knots'
+    })),
+    mach: Type.Optional(Type.Number({
+        description: 'Mach number'
+    })),
+    wd: Type.Optional(Type.Number({
+        description: 'Wind direction in degrees'
+    })),
+    ws: Type.Optional(Type.Number({
+        description: 'Wind speed in knots'
+    })),
+    track_rate: Type.Optional(Type.Number({
+        description: 'Rate of change of track in degrees/second'
+    })),
+    roll: Type.Optional(Type.Number({
+        description: 'Roll angle in degrees'
+    })),
+    mag_heading: Type.Optional(Type.Number({
+        description: 'Magnetic heading in degrees'
+    })),
+    true_heading: Type.Optional(Type.Number({
+        description: 'True heading in degrees'
+    })),
+    nic: Type.Optional(Type.Number({
+        description: 'Navigation Integrity Category'
+    })),
+    rc: Type.Optional(Type.Number({
+        description: 'Radius of Containment in meters'
+    })),
+    version: Type.Optional(Type.Number({
+        description: 'ADS-B version number'
+    })),
+    nic_baro: Type.Optional(Type.Number({
+        description: 'Barometric altitude integrity code'
+    })),
+    nac_p: Type.Optional(Type.Number({
+        description: 'Position accuracy category'
+    })),
+    nac_v: Type.Optional(Type.Number({
+        description: 'Velocity accuracy category'
+    })),
+    sil: Type.Optional(Type.Number({
+        description: 'Source Integrity Level'
+    })),
+    sil_type: Type.Optional(Type.String({
+        description: 'Source Integrity Level type'
+    })),
+    gva: Type.Optional(Type.Number({
+        description: 'Geometric Vertical Accuracy'
+    })),
+    sda: Type.Optional(Type.Number({
+        description: 'System Design Assurance'
+    })),
+    alert: Type.Optional(Type.Number({
+        description: 'Alert bit value'
+    })),
+    spi: Type.Optional(Type.Number({
+        description: 'Special Position Identification bit value'
+    })),
+    mlat: Type.Optional(Type.Array(Type.Any(), {
+        description: 'MLAT fields'
+    })),
+    tisb: Type.Optional(Type.Array(Type.Any(), {
+        description: 'TIS-B fields'
+    })),
+    messages: Type.Optional(Type.Number({
+        description: 'Number of messages received from this aircraft'
+    })),
+    rssi: Type.Optional(Type.Number({
+        description: 'Received Signal Strength Indicator'
     })),
     dst: Type.Optional(Type.Number({
         description: 'Distance from receiver in nautical miles'
@@ -370,10 +452,21 @@ export default class Task extends ETL {
                 throw new Error(`ADSBX API returned status ${res.status}: ${res.statusText}`);
             }
             
-            body = await res.typed(Type.Object({
-                msg: Type.String(),
-                ac: Type.Array(ADSBResponse)
-            }));
+            // Get the raw response first
+            const rawResponse = await res.json();
+            
+            if (env.DEBUG) {
+                console.log('Raw API response:', JSON.stringify(rawResponse).substring(0, 1000) + '...');
+            }
+            
+            // Use a simple approach that doesn't rely on strict validation
+            // This is more resilient to API changes and variations
+            if (rawResponse && typeof rawResponse === 'object' && 'ac' in rawResponse && Array.isArray(rawResponse.ac)) {
+                body = rawResponse;
+                console.log(`Processing ${rawResponse.ac.length} aircraft`);
+            } else {
+                throw new Error('Invalid API response format: missing aircraft data');
+            }
         } catch (error) {
             console.error(`Error fetching ADSBX data: ${error.message}`);
             // Return empty feature collection on error
