@@ -212,6 +212,30 @@ const Env = Type.Object({
  * This schema has been enhanced to properly validate all fields used in the code
  * to prevent potential runtime errors.
  */
+// Define a minimal interface for aircraft data with just the fields we need
+interface AircraftData {
+    hex?: string;
+    type?: string;
+    flight?: string;
+    r?: string;
+    t?: string;
+    alt_baro?: string | number;
+    alt_geom?: string | number;
+    gs?: number;
+    track?: number;
+    lat: number;
+    lon: number;
+    seen_pos: number;
+    seen: number;
+    category?: string;
+    squawk?: string;
+    emergency?: string;
+    dbFlags?: number;
+    group?: string;
+    cot_type?: string;
+    comments?: string;
+}
+
 // Define a more flexible schema for ADSBExchange API responses
 const ADSBResponse = Type.Object({
     // Required fields
@@ -462,8 +486,9 @@ export default class Task extends ETL {
             // Use a simple approach that doesn't rely on strict validation
             // This is more resilient to API changes and variations
             if (rawResponse && typeof rawResponse === 'object' && 'ac' in rawResponse && Array.isArray(rawResponse.ac)) {
-                body = rawResponse;
-                console.log(`Processing ${rawResponse.ac.length} aircraft`);
+                // Use type assertion to help TypeScript understand the structure
+                body = rawResponse as { ac: AircraftData[], msg: string };
+                console.log(`Processing ${body.ac.length} aircraft`);
             } else {
                 throw new Error('Invalid API response format: missing aircraft data');
             }
@@ -634,7 +659,7 @@ export default class Task extends ETL {
             }
             
             // Helper function to build structured remarks
-            function buildRemarks(aircraft: Static<typeof ADSBResponse>): string {
+            function buildRemarks(aircraft: AircraftData): string {
                 const remarksObj: Record<string, string> = {
                     'Flight': (aircraft.flight || 'Unknown').trim(),
                     'Registration': (aircraft.r || 'Unknown').trim(),
