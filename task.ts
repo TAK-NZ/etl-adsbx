@@ -6,9 +6,9 @@
  * handling for public safety aircraft.
  */
 
-import { Static, Type, TSchema } from '@sinclair/typebox';
+import { Type, TSchema } from '@sinclair/typebox';
 import { fetch } from '@tak-ps/etl'
-import ETL, { Event, SchemaType, handler as internal, local, InvocationType, DataFlowType, InputFeatureCollection } from '@tak-ps/etl';
+import ETL, { Event, SchemaType, handler as internal, local, InvocationType, DataFlowType } from '@tak-ps/etl';
 
 /**
  * Constants used throughout the ETL task
@@ -928,8 +928,8 @@ export default class Task extends ETL {
         console.log(`ok - processed ${ids.size} valid aircraft (filtered from ${body.ac.length} total)`);
         
         // Create the final GeoJSON feature collection to submit
-        const fc: Static<typeof InputFeatureCollection> = {
-            type: 'FeatureCollection',
+        const fc = {
+            type: 'FeatureCollection' as const,
             features
         };
 
