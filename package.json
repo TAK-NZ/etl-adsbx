@@ -21,6 +21,6 @@
     },
     "dependencies": {
         "@sinclair/typebox": "^0.34.0",
-        "@tak-ps/etl": "^9.9.0"
+        "@tak-ps/etl": "^9.22.0"
     }
 }
