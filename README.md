@@ -113,6 +113,20 @@ When registering this ETL as a task in CloudTAK:
 
 This will ensure proper visual identification and documentation for the task in the CloudTAK interface.
 
+## Automatic Firefighting Aircraft Detection
+
+The ETL automatically detects and classifies firefighting aircraft based on their transponder squawk code. This feature is based on New Zealand's Civil Aviation Rule Part 91, Rule 91.247 (Use of transponder and altitude reporting equipment), under Table 2: Airspace SSR Codes ([CAA Rule 91.247](https://www.aviation.govt.nz/rules/rule-part/part-91/subpart-c/#P91.247)):
+
+| Flight rules | Type of aircraft operation | SSR Code |
+|--------------|----------------------------|----------|
+| VFR | For aircraft involved in fire fighting and reconnaissance duties | 0111 |
+
+Aircraft transmitting the configured firefighting squawk code (default: `0111`) are automatically classified as:
+- **Fixed-wing aircraft**: `FIRE_MULTI_USE` icon
+- **Helicopters**: `FIRE_ROTOR` icon
+
+This classification overrides any existing group assignment and ensures proper visual identification of firefighting aircraft on the map.
+
 ## Development
 
 TAK.NZ provided Lambda ETLs are currently all written in [NodeJS](https://nodejs.org/en) through the use of a AWS Lambda optimized
