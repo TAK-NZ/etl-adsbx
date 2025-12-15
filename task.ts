@@ -200,6 +200,10 @@ const Env = Type.Object({
         description: 'ICAO HEX start value for domestic flights. E.g. AFFFFF for USA or C87FFF for NZ.', 
         default: 'C87FFF'
     }),
+    'ADSBX_FireFighting_Squawk': Type.String({
+        description: 'Squawk code for firefighting aircraft. Aircraft with this squawk will be automatically classified as fire service.',
+        default: '0111'
+    }),
     'DEBUG': Type.Boolean({ 
         description: 'Print ADSBX results in logs.', 
         default: false })
@@ -647,6 +651,18 @@ export default class Task extends ETL {
                 }
                 if (include.comments !== undefined) {
                     ac.comments = include.comments;
+                }
+            }
+            
+            // Check for firefighting squawk code and automatically classify as fire service
+            if (ac.squawk && ac.squawk === env.ADSBX_FireFighting_Squawk) {
+                // Determine fire service group based on aircraft type
+                if (ac_type === '-H') {
+                    // Helicopter
+                    ac.group = 'FIRE_ROTOR';
+                } else if (ac_type === '-F') {
+                    // Fixed wing aircraft
+                    ac.group = 'FIRE_MULTI_USE';
                 }
             }
 
