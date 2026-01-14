@@ -204,10 +204,9 @@ const Env = Type.Object({
         description: 'Squawk code for firefighting aircraft. Aircraft with this squawk will be automatically classified as fire service.',
         default: '0111'
     }),
-    'TAR1090_Endpoints': Type.Array(Type.String(), {
-        description: 'List of tar1090 endpoints to query for additional aircraft data. Enter one URL per line. Example: http://feeder1/tar1090/data/aircraft.json',
-        default: []
-    }),
+    'Supplementary_Feeds': Type.Array(Type.Object({
+        url: Type.Optional(Type.String({ description: 'Supplementary feed URL. Supports tar1090 format (aircraft.json) and ADSBX-compatible APIs. Examples: http://feeder1/tar1090/data/aircraft.json or https://api.adsb.lol/v2/point/lat/lon/radius' }))
+    })),
     'DEBUG': Type.Boolean({ 
         description: 'Print ADSBX results in logs.', 
         default: false })
@@ -455,22 +454,27 @@ export default class Task extends ETL {
     }
 
     /**
-     * Fetch aircraft data from a tar1090 endpoint
+     * Fetch aircraft data from a supplementary feed endpoint
      */
-    async fetchTar1090(url: string): Promise<AircraftData[]> {
+    async fetchSupplementaryFeed(url: string): Promise<AircraftData[]> {
         try {
             const res = await fetch(url);
             if (!res.ok) {
-                throw new Error(`tar1090 endpoint returned status ${res.status}`);
+                throw new Error(`Supplementary feed returned status ${res.status}`);
             }
-            const data = await res.json() as { aircraft?: AircraftData[] };
+            const data = await res.json() as { aircraft?: AircraftData[], ac?: AircraftData[] };
             if (data && Array.isArray(data.aircraft)) {
+                console.log(`ok - Received ${data.aircraft.length} aircraft from ${url}`);
                 return data.aircraft;
+            }
+            if (data && Array.isArray(data.ac)) {
+                console.log(`ok - Received ${data.ac.length} aircraft from ${url}`);
+                return data.ac;
             }
             return [];
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            console.error(`Error fetching tar1090 data from ${url}: ${errorMessage}`);
+            console.error(`Error fetching supplementary feed from ${url}: ${errorMessage}`);
             return [];
         }
     }
@@ -478,7 +482,7 @@ export default class Task extends ETL {
     /**
      * Main control function that executes the ETL process
      * 1. Fetches aircraft data from ADSBExchange API
-     * 2. Fetches aircraft data from tar1090 endpoints
+     * 2. Fetches aircraft data from supplementary feeds
      * 3. Processes and transforms the data
      * 4. Filters based on configuration
      * 5. Submits the data to CloudTAK
@@ -551,14 +555,16 @@ export default class Task extends ETL {
         // Map to store processed aircraft data by ID (ICAO hex code)
         const ids = new Map();
 
-        // Fetch tar1090 data from all configured endpoints
-        const tar1090Aircraft: AircraftData[] = [];
-        for (const endpoint of env.TAR1090_Endpoints) {
-            const aircraft = await this.fetchTar1090(endpoint);
-            tar1090Aircraft.push(...aircraft);
+        // Fetch data from all supplementary feeds
+        const supplementaryAircraft: AircraftData[] = [];
+        for (const feedConfig of env.Supplementary_Feeds) {
+            if (feedConfig && feedConfig.url) {
+                const aircraft = await this.fetchSupplementaryFeed(feedConfig.url);
+                supplementaryAircraft.push(...aircraft);
+            }
         }
-        if (tar1090Aircraft.length > 0) {
-            console.log(`ok - Received ${tar1090Aircraft.length} aircraft from tar1090 endpoints`);
+        if (supplementaryAircraft.length > 0) {
+            console.log(`ok - Total ${supplementaryAircraft.length} aircraft from ${env.Supplementary_Feeds.length} supplementary feeds`);
         }
 
         // Process each aircraft from the API response
@@ -809,10 +815,10 @@ export default class Task extends ETL {
             }
         }
 
-        // Process tar1090 aircraft data - only add/update if more recent
-        let tar1090Added = 0;
-        let tar1090Updated = 0;
-        for (const ac of tar1090Aircraft) {
+        // Process supplementary feed aircraft data - only add/update if more recent
+        let supplementaryAdded = 0;
+        let supplementaryUpdated = 0;
+        for (const ac of supplementaryAircraft) {
             if (!ac.hex || !ac.lat || !ac.lon) continue;
 
             if (env.ADSBX_Ignore_Tower_Vehicles && (ac.r == 'TWR' || ac.r == 'GND' || ac.type == 'adsb_icao_nt' || ac.type == 'other')) continue;
@@ -1009,15 +1015,15 @@ export default class Task extends ETL {
                 
                 // Track statistics
                 if (isNew) {
-                    tar1090Added++;
+                    supplementaryAdded++;
                 } else if (isUpdate) {
-                    tar1090Updated++;
+                    supplementaryUpdated++;
                 }
             }
         }
         
-        if (tar1090Aircraft.length > 0) {
-            console.log(`ok - tar1090 data: ${tar1090Added} new aircraft, ${tar1090Updated} updated aircraft`);
+        if (supplementaryAircraft.length > 0) {
+            console.log(`ok - Supplementary feeds: ${supplementaryAdded} new aircraft, ${supplementaryUpdated} updated aircraft`);
         }
 
         // Prepare array for the final feature collection
