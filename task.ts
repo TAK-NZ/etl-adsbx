@@ -1023,7 +1023,7 @@ export default class Task extends ETL {
         }
         
         if (supplementaryAircraft.length > 0) {
-            console.log(`ok - Supplementary feeds: ${supplementaryAdded} new aircraft, ${supplementaryUpdated} updated aircraft`);
+            console.log(`ok - Supplementary feeds: ${supplementaryAdded} unique aircraft, ${supplementaryUpdated} updated with fresher data`);
         }
 
         // Prepare array for the final feature collection
