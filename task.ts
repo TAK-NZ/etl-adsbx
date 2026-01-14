@@ -204,6 +204,10 @@ const Env = Type.Object({
         description: 'Squawk code for firefighting aircraft. Aircraft with this squawk will be automatically classified as fire service.',
         default: '0111'
     }),
+    'TAR1090_Endpoints': Type.Array(Type.String(), {
+        description: 'List of tar1090 endpoints to query for additional aircraft data. Enter one URL per line. Example: http://feeder1/tar1090/data/aircraft.json',
+        default: []
+    }),
     'DEBUG': Type.Boolean({ 
         description: 'Print ADSBX results in logs.', 
         default: false })
@@ -451,11 +455,33 @@ export default class Task extends ETL {
     }
 
     /**
+     * Fetch aircraft data from a tar1090 endpoint
+     */
+    async fetchTar1090(url: string): Promise<AircraftData[]> {
+        try {
+            const res = await fetch(url);
+            if (!res.ok) {
+                throw new Error(`tar1090 endpoint returned status ${res.status}`);
+            }
+            const data = await res.json() as { aircraft?: AircraftData[] };
+            if (data && Array.isArray(data.aircraft)) {
+                return data.aircraft;
+            }
+            return [];
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.error(`Error fetching tar1090 data from ${url}: ${errorMessage}`);
+            return [];
+        }
+    }
+
+    /**
      * Main control function that executes the ETL process
      * 1. Fetches aircraft data from ADSBExchange API
-     * 2. Processes and transforms the data
-     * 3. Filters based on configuration
-     * 4. Submits the data to CloudTAK
+     * 2. Fetches aircraft data from tar1090 endpoints
+     * 3. Processes and transforms the data
+     * 4. Filters based on configuration
+     * 5. Submits the data to CloudTAK
      */
     async control() {
         const env = await this.env(Env);
@@ -524,6 +550,16 @@ export default class Task extends ETL {
 
         // Map to store processed aircraft data by ID (ICAO hex code)
         const ids = new Map();
+
+        // Fetch tar1090 data from all configured endpoints
+        const tar1090Aircraft: AircraftData[] = [];
+        for (const endpoint of env.TAR1090_Endpoints) {
+            const aircraft = await this.fetchTar1090(endpoint);
+            tar1090Aircraft.push(...aircraft);
+        }
+        if (tar1090Aircraft.length > 0) {
+            console.log(`ok - Received ${tar1090Aircraft.length} aircraft from tar1090 endpoints`);
+        }
 
         // Process each aircraft from the API response
         for (const ac of body.ac) {
@@ -771,6 +807,217 @@ export default class Task extends ETL {
             if (ac.cot_type && ac.cot_type.trim() !== 'None' && ac.cot_type.trim() !== 'UNKNOWN') {
                 feat.properties.type = ac.cot_type.trim();
             }
+        }
+
+        // Process tar1090 aircraft data - only add/update if more recent
+        let tar1090Added = 0;
+        let tar1090Updated = 0;
+        for (const ac of tar1090Aircraft) {
+            if (!ac.hex || !ac.lat || !ac.lon) continue;
+
+            if (env.ADSBX_Ignore_Tower_Vehicles && (ac.r == 'TWR' || ac.r == 'GND' || ac.type == 'adsb_icao_nt' || ac.type == 'other')) continue;
+
+            const id = ac.hex.toLowerCase().trim();
+            const existingAircraft = ids.get(id);
+            
+            // Track if this is a new aircraft or an update
+            const isNew = !existingAircraft;
+            const isUpdate = existingAircraft && ac.seen_pos !== undefined && ac.seen_pos < existingAircraft.properties.metadata.seen_pos;
+            
+            // Only process if aircraft is new or tar1090 data is more recent
+            if (isNew || isUpdate) {
+                const coordinates = [ac.lon, ac.lat];
+
+                let altitudeValue;
+                if (ac.alt_geom !== undefined && ac.alt_geom !== null) {
+                    altitudeValue = typeof ac.alt_geom === 'string' ? parseFloat(ac.alt_geom) : ac.alt_geom;
+                } else if (ac.alt_baro !== undefined && ac.alt_baro !== null) {
+                    altitudeValue = typeof ac.alt_baro === 'string' ? parseFloat(ac.alt_baro) : ac.alt_baro;
+                }
+                
+                if (altitudeValue !== undefined && !isNaN(altitudeValue)) {
+                    coordinates.push(altitudeValue * FEET_TO_METERS);
+                } else {
+                    coordinates.push(Number.NaN);
+                }
+
+                if (!id.trim().length) continue;
+
+                let ac_type = '';
+                switch (ac.category) {
+                    case 'A0': case 'A1': case 'A2': case 'A3': case 'A4': case 'A5': case 'A6':
+                        ac_type = '-F';
+                        break;
+                    case 'A7':
+                        ac_type = '-H';
+                        break;
+                    case 'B2':
+                        ac_type = '-L';
+                        break;
+                    default:
+                        break;
+                }
+
+                function isHexInRange(hex: string, startHex: string, endHex: string): boolean {
+                    if (!hex) return false;
+                    const normalizeHex = (h: string) => h.trim().toUpperCase().padStart(6, '0');
+                    const hexVal = parseInt(normalizeHex(hex), 16);
+                    const startVal = parseInt(normalizeHex(startHex), 16);
+                    const endVal = parseInt(normalizeHex(endHex), 16);
+                    return hexVal >= startVal && hexVal <= endVal;
+                }
+                
+                let ac_affiliation;
+                if (ac.hex && isHexInRange(ac.hex, env.ADSBX_ICAOHex_Domestic_Start, env.ADSBX_ICAOHex_Domestic_End)) {
+                    ac_affiliation = '-f';
+                } else {
+                    ac_affiliation = '-n';
+                }
+
+                let ac_civmil = '-C';
+                if (ac.dbFlags !== undefined && ac.dbFlags % 2 !== 0) {
+                    ac_civmil = '-M';
+                    if (ac.hex && isHexInRange(ac.hex, env.ADSBX_ICAOHex_Domestic_Start, env.ADSBX_ICAOHex_Domestic_End)) {
+                        ac_affiliation = '-f';
+                    } else {
+                        ac_affiliation = '-u';
+                    }
+                }
+
+                const isEmergency = ac.emergency !== undefined && ac.emergency !== 'none';
+                
+                let include;
+                if (ac.hex) {
+                    include = hexMap.get(ac.hex.toLowerCase().trim());
+                }
+                if (!include && ac.r) {
+                    include = includesMap.get(ac.r.toLowerCase().trim());
+                }
+                
+                if (include) {
+                    if (include.group !== undefined) {
+                        ac.group = include.group;
+                    }
+                    if (include.type !== undefined) {
+                        ac.cot_type = include.type;
+                    }
+                    if (include.comments !== undefined) {
+                        ac.comments = include.comments;
+                    }
+                }
+                
+                if (ac.squawk && ac.squawk === env.ADSBX_FireFighting_Squawk) {
+                    if (ac_type === '-H') {
+                        ac.group = 'FIRE_ROTOR';
+                    } else if (ac_type === '-F') {
+                        ac.group = 'FIRE_MULTI_USE';
+                    }
+                }
+
+                interface FeatureProperties {
+                    type: string;
+                    callsign: string;
+                    time: Date;
+                    start: Date;
+                    speed: number;
+                    course: number;
+                    metadata: typeof ac;
+                    remarks: string;
+                    detail?: { alert: string };
+                    icon?: string;
+                }
+                
+                function buildRemarks(aircraft: AircraftData): string {
+                    const remarksObj: Record<string, string> = {
+                        'Flight': (aircraft.flight || 'Unknown').trim(),
+                        'Registration': (aircraft.r || 'Unknown').trim(),
+                        'Type': (aircraft.t || 'Unknown').trim(),
+                        'Category': (aircraft.category || 'Unknown').trim(),
+                        'Emergency': (aircraft.emergency || 'Unknown').trim(),
+                        'Squawk': (aircraft.squawk || 'Unknown').trim()
+                    };
+                    
+                    if (aircraft.alt_baro !== undefined) {
+                        remarksObj['Alt Baro'] = typeof aircraft.alt_baro === 'number' ? 
+                            `${aircraft.alt_baro} ft` : aircraft.alt_baro.toString();
+                    }
+                    
+                    if (aircraft.alt_geom !== undefined) {
+                        remarksObj['Alt Geom'] = typeof aircraft.alt_geom === 'number' ? 
+                            `${aircraft.alt_geom} ft` : aircraft.alt_geom.toString();
+                    }
+                    
+                    if (aircraft.group && aircraft.group.trim() !== 'None' && aircraft.group.trim() !== 'UNKNOWN') {
+                        remarksObj['Group'] = aircraft.group.replace(/_/g, '-').trim();
+                    }
+                    
+                    if (aircraft.comments) {
+                        remarksObj['Comments'] = aircraft.comments.trim();
+                    }
+                    
+                    const orderedKeys = [
+                        'Flight', 'Registration', 'Type', 'Category', 
+                        'Alt Baro', 'Alt Geom', 'Emergency', 'Squawk', 'Group', 'Comments'
+                    ];
+                    
+                    return orderedKeys
+                        .filter(key => key in remarksObj)
+                        .map(key => `${key}: ${remarksObj[key]}`)
+                        .join('\n');
+                }
+                
+                const properties: FeatureProperties = {
+                    type: 'a' + ac_affiliation + '-A' + ac_civmil + ac_type,
+                    callsign: (ac.flight || '').trim(),
+                    time: new Date(Date.now() - ((ac.seen_pos || 0) * 1000)),
+                    start: new Date(Date.now() - ((ac.seen_pos || 0) * 1000)),
+                    speed: (typeof ac.gs === 'number' ? ac.gs * KNOTS_TO_MPS : Number.NaN),
+                    course: (typeof ac.track === 'number' ? ac.track : UNKNOWN_COURSE),
+                    metadata: ac,
+                    remarks: buildRemarks(ac)
+                };
+                
+                if (isEmergency && env.ADSBX_Emergency_Alert) {
+                    properties.detail = {
+                        alert: "red"
+                    };
+                }
+                
+                ids.set(id, {
+                    id: id,
+                    type: 'Feature',
+                    properties: properties,
+                    geometry: {
+                        type: 'Point',
+                        coordinates
+                    }
+                });
+
+                const feat = ids.get(id);
+                if (ac.group && ac.group.trim() !== 'UNKNOWN' && ac.group.trim() !== 'None' && env.ADSBX_Use_Icon) {
+                    const groupName = ac.group.trim();
+                    if (VALID_ICON_GROUPS.has(groupName)) {
+                        feat.properties.icon = PUBLIC_SAFETY_AIR_ICON_PATH + groupName + '.png';
+                    } else {
+                        console.warn(`Warning: Invalid icon group '${groupName}' for aircraft ${id}. Using default icon.`);
+                    }
+                }
+
+                if (ac.cot_type && ac.cot_type.trim() !== 'None' && ac.cot_type.trim() !== 'UNKNOWN') {
+                    feat.properties.type = ac.cot_type.trim();
+                }
+                
+                // Track statistics
+                if (isNew) {
+                    tar1090Added++;
+                } else if (isUpdate) {
+                    tar1090Updated++;
+                }
+            }
+        }
+        
+        if (tar1090Aircraft.length > 0) {
+            console.log(`ok - tar1090 data: ${tar1090Added} new aircraft, ${tar1090Updated} updated aircraft`);
         }
 
         // Prepare array for the final feature collection
