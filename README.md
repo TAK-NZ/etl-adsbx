@@ -24,6 +24,8 @@ Aircraft transmitting the configured firefighting squawk code (default: `0111`) 
 
 This classification overrides any existing group assignment and ensures proper visual identification of firefighting aircraft on the map.
 
+![FIRE_ROTOR helicopter squawking 011](docs/Fire-Rotor-0111-Squawk.png)
+
 ## Supported icons for public safety aircraft
 * a-f-A-M-F-A = Friendly Military Fixed Wing - Attack Aircraft
 * a-f-A-M-F-C = Friendly Military Fixed Wing - Cargo Aircraft
