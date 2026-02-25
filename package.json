@@ -2,7 +2,7 @@
     "name": "etl-adsbx",
     "type": "module",
     "prviate": true,
-    "version": "1.0.0",
+    "version": "1.2.8",
     "description": "ETL for ADS-B data from ADSBExchange API",
     "main": "index.js",
     "scripts": {
