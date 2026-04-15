@@ -572,6 +572,7 @@ export default class Task extends ETL {
             if (!ac.hex) continue;
 
             if (env.ADSBX_Ignore_Tower_Vehicles && (ac.r == 'TWR' || ac.r == 'GND' || ac.type == 'adsb_icao_nt' || ac.type == 'other')) continue; // Ignore tower, ground vehicles and test equipment
+            if (env.ADSBX_Ignore_Tower_Vehicles && ac.category && ac.category.startsWith('C')) continue; // Ignore surface vehicles and ground equipment (C0-C7)
 
             const id = ac.hex.toLowerCase().trim();
             const coordinates = [ac.lon, ac.lat];
@@ -822,6 +823,7 @@ export default class Task extends ETL {
             if (!ac.hex || !ac.lat || !ac.lon) continue;
 
             if (env.ADSBX_Ignore_Tower_Vehicles && (ac.r == 'TWR' || ac.r == 'GND' || ac.type == 'adsb_icao_nt' || ac.type == 'other')) continue;
+            if (env.ADSBX_Ignore_Tower_Vehicles && ac.category && ac.category.startsWith('C')) continue;
 
             const id = ac.hex.toLowerCase().trim();
             const existingAircraft = ids.get(id);
