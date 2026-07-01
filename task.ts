@@ -206,7 +206,7 @@ const Env = Type.Object({
     }),
     'Supplementary_Feeds': Type.Array(Type.Object({
         url: Type.Optional(Type.String({ description: 'Supplementary feed URL. Supports tar1090 format (aircraft.json) and ADSBX-compatible APIs. Examples: http://feeder1/tar1090/data/aircraft.json or https://api.adsb.lol/v2/point/lat/lon/radius' }))
-    })),
+    }), { default: [] }),
     'DEBUG': Type.Boolean({ 
         description: 'Print ADSBX results in logs.', 
         default: false })
@@ -527,7 +527,7 @@ export default class Task extends ETL {
                 throw new Error('Invalid API response format: missing aircraft data');
             }
         } catch (error) {
-            console.error(`Error fetching ADSBX data: ${error.message}`);
+            console.error(`Error fetching ADSBX data: ${error instanceof Error ? error.message : String(error)}`)
             // Return empty feature collection on error
             await this.submit({
                 type: 'FeatureCollection',
