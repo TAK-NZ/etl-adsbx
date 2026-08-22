@@ -55,53 +55,59 @@ MIL,,NZ7014,,a-f-A-M-F-C-M,Lockheed C-130J Super Hercules #NZDF
 MIL,,NZ7015,,a-f-A-M-F-C-M,Lockheed C-130J Super Hercules #NZDF
 MIL,,NZ7571,,a-f-A-M-F-U-H,Boeing 757-2K2 #NZDF
 MIL,,NZ7572,,a-f-A-M-F-U-H,Boeing 757-2K2 #NZDF
+EMS,c81e3c,ZK-SAR,CIV_FIXED_ISR,a-f-A-C-F,Royal New Zealand Coastguard
 EMS,c81e82,ZK-FDN,EMS_FIXED_WING,a-f-A-C-F,New Zealand Flying Doctors Service
 EMS,c81d25,ZK-FDR,EMS_FIXED_WING,a-f-A-C-F,New Zealand Flying Doctors Service
 EMS,c828bb,ZK-FDS,EMS_FIXED_WING,a-f-A-C-F,New Zealand Flying Doctors Service
 EMS,c82aa1,ZK-FDT,EMS_FIXED_WING,a-f-A-C-F,New Zealand Flying Doctors Service
-EMS,c82760,ZK-HCX,EMS_ROTOR_RESCUE,a-f-A-C-H,Taupo - Air 1 Tairawhiti #SAR
-LAW,c82a1f,ZK-HDG,LE_ROTOR,a-f-A-C-H,New Zealand Police #NZ-Police
-EMS,c82792,ZK-HEP,EMS_ROTOR_RESCUE,a-f-A-C-H,Search And Rescue Services #SAR
+EMS,c82a08,ZK-LFA,EMS_FIXED_WING,a-f-A-C-F,Life Flight
+EMS,c82a1b,ZK-LFI,EMS_FIXED_WING,a-f-A-C-F,Life Flight
+EMS,c82a0f,ZK-LFL,EMS_FIXED_WING,a-f-A-C-F,Life Flight
+EMS,c82285,ZK-SSH,EMS_FIXED_WING,a-f-A-C-F,Starship Air Ambulance
+EMS,c82760,ZK-HCX,EMS_ROTOR_RESCUE,a-f-A-C-H,Gisborne - Air 1 Tairawhiti #SAR
+EMS,c82792,ZK-HEP,EMS_ROTOR_RESCUE,a-f-A-C-H,Central Region Relief (CFL11) #SAR
 EMS,c8249e,ZK-HES,EMS_ROTOR_RESCUE,a-f-A-C-H,New Plymouth - Air 1 Taranaki #SAR
-EMS,c82226,ZK-HGU,EMS_ROTOR_RESCUE,a-f-A-C-H,Canterbury West Coast Air Rescue - Air 3 Christchurch #SAR
+EMS,c829d4,ZK-HEV,EMS_ROTOR_RESCUE,a-f-A-C-H,Te Anau - Air 2 Te Anau #SAR
+EMS,c82226,ZK-HGU,EMS_ROTOR_RESCUE,a-f-A-C-H,Nelson - Air 2 Nelson #SAR
 EMS,c82481,ZK-HGW,EMS_ROTOR_RESCUE,a-f-A-C-H,Canterbury West Coast Air Rescue - Air 4 Christchurch #SAR
-EMS,c82761,ZK-HIQ,EMS_ROTOR_RESCUE,a-f-A-C-H,Hastings - Air 1 Te Matau #SAR
+EMS,c82761,ZK-HIQ,EMS_ROTOR_RESCUE,a-f-A-C-H,Hastings - Relief #SAR
 EMS,c811df,ZK-HJC,EMS_ROTOR_RESCUE,a-f-A-C-H,Canterbury West Coast Air Rescue - Air 1 West Coast #SAR
 EMS,c81395,ZK-HJK,EMS_ROTOR_RESCUE,a-f-A-C-H,Otago Rescue Helicopter - Air 7 Dunedin #SAR
 EMS,c81bea,ZK-HKZ,EMS_ROTOR_RESCUE,a-f-A-C-H,Auckland Rescue Helicopter #SAR
+EMS,c81186,ZK-HLF,EMS_ROTOR_RESCUE,a-f-A-C-H,Westpac Rescue Helicopter #SAR
 EMS,c8277b,ZK-HLH,EMS_ROTOR_RESCUE,a-f-A-C-H,Auckland Rescue Helicopter #SAR
-EMS,c82278,ZK-HNP,EMS_ROTOR_RESCUE,a-f-A-C-H,Tauranga - Air 1 Tairawhiti #SAR
+EMS,c82278,ZK-HNP,EMS_ROTOR_RESCUE,a-f-A-C-H,Central Region Relief (CFL14) #SAR
 EMS,c8277e,ZK-HQC,EMS_ROTOR_RESCUE,a-f-A-C-H,Northland Emergency Services - Helimed 4 #SAR
 EMS,c8277f,ZK-HQO,EMS_ROTOR_RESCUE,a-f-A-C-H,Northland Emergency Services - Helimed 5 #SAR
 EMS,c82216,ZK-HTQ,EMS_ROTOR_RESCUE,a-f-A-C-H,Northern Rescue Helicopter #SAR
 EMS,c813b6,ZK-HUP,EMS_ROTOR_RESCUE,a-f-A-C-H,Otago Rescue Helicopter - Air 1 Queenstown #SAR
-EMS,c80f67,ZK-IBK,EMS_ROTOR_RESCUE,a-f-A-C-H,Otago Rescue Helicopter - Air 1 Te Anau #SAR
+EMS,c80f67,ZK-IBK,EMS_ROTOR_RESCUE,a-f-A-C-H,Te Anau - Air 1 Te Anau #SAR
 EMS,c80010,ZK-ICU,EMS_ROTOR_RESCUE,a-f-A-C-H,Otago Rescue Helicopter - Air 8 Dunedin #SAR
 EMS,c82af1,ZK-IDH,EMS_ROTOR_RESCUE,a-f-A-C-H,Otago Rescue Helicopter - Air 2 Dunedin #SAR
 EMS,c82b43,ZK-IDU,EMS_ROTOR_RESCUE,a-f-A-C-H,Otago Rescue Helicopter - Air 1 Dunedin #SAR
+EMS,c8000d,ZK-IGA,EMS_ROTOR_RESCUE,a-f-A-C-H,Greymouth - AirMed 7 #SAR
+EMS,c81ea8,ZK-IGB,EMS_ROTOR_RESCUE,a-f-A-C-H,Canterbury West Coast Air Rescue - AMD8 Christchurch #SAR
+EMS,c832b1,ZK-IGC,EMS_ROTOR_RESCUE,a-f-A-C-H,Nelson - Air 1 Nelson (AMD9) #SAR
+EMS,c80563,ZK-IGD,EMS_ROTOR_RESCUE,a-f-A-C-H,Canterbury West Coast Air Rescue #SAR
 EMS,c82ace,ZK-IGG,EMS_ROTOR_RESCUE,a-f-A-C-H,Otago Rescue Helicopter - Air 4 Dunedin #SAR
-EMS,c82846,ZK-IGI,EMS_ROTOR_RESCUE,a-f-A-C-H,Canterbury West Coast Air Rescue - Air 1 Christchurch #SAR
 EMS,c827c0,ZK-IGS,EMS_ROTOR_RESCUE,a-f-A-C-H,Canterbury West Coast Air Rescue - Air 2 Christchurch #SAR
-EMS,c8236d,ZK-IIX,EMS_ROTOR_RESCUE,a-f-A-C-H,Gisborne - Air 1 Tairawhiti #SAR
+EMS,c832b8,ZK-IHB,EMS_ROTOR_RESCUE,a-f-A-C-H,Northland Emergency Services - NRES5 #SAR
+EMS,c8236d,ZK-IIX,EMS_ROTOR_RESCUE,a-f-A-C-H,Palmerston North - Air 1 Manawatu #SAR
 EMS,c81c60,ZK-IME,EMS_ROTOR_RESCUE,a-f-A-C-H,Otago Rescue Helicopter - Air 6 Dunedin #SAR
 EMS,c812df,ZK-IMN,EMS_ROTOR_RESCUE,a-f-A-C-H,Marlborough Rescue Helicopter #SAR
-EMS,c81186,ZK-HLF,EMS_ROTOR_RESCUE,a-f-A-C-H,Westpac Rescue Helicopter #SAR
-LAW,c8281b,ZK-IPB,LE_ROTOR,a-f-A-C-H,New Zealand Police #NZ-Police
-LAW,c8280d,ZK-IPC,LE_ROTOR,a-f-A-C-H,New Zealand Police #NZ-Police
-LAW,c82827,ZK-IPJ,LE_ROTOR,a-f-A-C-H,New Zealand Police #NZ-Police
-EMS,c81e04,ZK-IPT,EMS_ROTOR_RESCUE,a-f-A-C-H,Palmerston North - Air 1 Manawatu #SAR
+EMS,c81e04,ZK-IPT,EMS_ROTOR_RESCUE,a-f-A-C-H,Palmerston North - Relief (CFL07) #SAR
 EMS,c83311,ZK-IRB,EMS_ROTOR_RESCUE,a-f-A-C-H,Auckland Rescue Helicopter #SAR
-EMS,c819e3,ZK-IRM,EMS_ROTOR_RESCUE,a-f-A-C-H,Southern Lakes Helicopters #SAR
-EMS,c82058,ZK-IRU,EMS_ROTOR_RESCUE,a-f-A-C-H,Wellington - Air 1 Te Upoko #SAR
+EMS,c82058,ZK-IRU,EMS_ROTOR_RESCUE,a-f-A-C-H,Central Region Relief (CFL11) #SAR
 EMS,c82472,ZK-IWD,EMS_ROTOR_RESCUE,a-f-A-C-H,Otago Rescue Helicopter - Air 3 Dunedin #SAR
 EMS,c822c5,ZK-IWG,EMS_ROTOR_RESCUE,a-f-A-C-H,Otago Rescue Helicopter - Air 5 Dunedin #SAR
 EMS,c8246f,ZK-IWL,EMS_ROTOR_RESCUE,a-f-A-C-H,Otago Rescue Helicopter - Air 2 Queenstown #SAR
-EMS,c82842,ZK-IXD,EMS_ROTOR_RESCUE,a-f-A-C-H,Taupo #SAR
+EMS,c82842,ZK-IXD,EMS_ROTOR_RESCUE,a-f-A-C-H,Taupo - CFL03 #SAR
+EMS,c83353,ZK-IXM,EMS_ROTOR_RESCUE,a-f-A-C-H,Hastings - Air 1 Te Matau (CFL06) #SAR
 EMS,c83354,ZK-IXN,EMS_ROTOR_RESCUE,a-f-A-C-H,Hamilton - Air 1 Waikato #SAR
 EMS,c829bc,ZK-IXO,EMS_ROTOR_RESCUE,a-f-A-C-H,Tauranga #SAR
+EMS,c82322,ZK-IXS,EMS_ROTOR_RESCUE,a-f-A-C-H,Wellington - Air 1 Te Upoko (CFL08) #SAR
 EMS,c827ac,ZK-IZB,EMS_ROTOR_RESCUE,a-f-A-C-H,Auckland Rescue Helicopter #SAR
-EMS,c82a08,ZK-LFA,EMS_FIXED_WING,a-f-A-C-F,Life Flight
-EMS,c82a1b,ZK-LFI,EMS_FIXED_WING,a-f-A-C-F,Life Flight
-EMS,c82a0f,ZK-LFL,EMS_FIXED_WING,a-f-A-C-F,Life Flight
-EMS,c81e3c,ZK-SAR,CIV_FIXED_ISR,a-f-A-C-F,Royal New Zealand Coastguard
-EMS,c82285,ZK-SSH,EMS_FIXED_WING,a-f-A-C-F,Starship Air Ambulance
+LAW,c82a1f,ZK-HDG,LE_ROTOR,a-f-A-C-H,New Zealand Police #NZ-Police
+LAW,c8281b,ZK-IPB,LE_ROTOR,a-f-A-C-H,New Zealand Police #NZ-Police
+LAW,c8280d,ZK-IPC,LE_ROTOR,a-f-A-C-H,New Zealand Police #NZ-Police
+LAW,c82827,ZK-IPJ,LE_ROTOR,a-f-A-C-H,New Zealand Police #NZ-Police
