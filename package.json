@@ -2,7 +2,7 @@
     "name": "etl-adsbx",
     "type": "module",
     "prviate": true,
-    "version": "1.2.10",
+    "version": "1.2.11",
     "description": "ETL for ADS-B data from ADSBExchange API",
     "main": "index.js",
     "scripts": {
@@ -15,14 +15,14 @@
     "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@types/geojson": "^7946.0.16",
-        "eslint": "^10.6.0",
+        "eslint": "^10.9.0",
         "ts-node": "^10.9.2",
         "typescript": "^6.0.3",
-        "typescript-eslint": "^8.62.1"
+        "typescript-eslint": "^8.67.0"
     },
     "dependencies": {
-        "@sinclair/typebox": "^0.34.49",
-        "@tak-ps/etl": "^10.7.0"
+        "@sinclair/typebox": "^0.34.52",
+        "@tak-ps/etl": "^10.13.0"
     },
     "overrides": {
         "minimatch": "^10.0.0",
