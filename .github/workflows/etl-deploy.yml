@@ -27,7 +27,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
           registry-url: https://registry.npmjs.org/
           cache: 'npm'
 
@@ -62,6 +62,9 @@ jobs:
       - name: Get tag
         id: tag
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -98,19 +101,20 @@ jobs:
           ECR_REPO_NAME=$(echo "$ECR_REPO_ARN" | cut -d'/' -f2)
           ECR_URI="${{ secrets.AWS_ACCOUNT_ID || secrets.DEMO_AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION || secrets.DEMO_AWS_REGION }}.amazonaws.com/${ECR_REPO_NAME}"
           
-          # Build Docker image
-          echo "Building Docker image..."
-          docker build -t etl .
-          
           # Tag image with ETL name and tag
           IMAGE_TAG="${ETL_NAME}-${TAG}"
           FULL_IMAGE_URI="${ECR_URI}:${IMAGE_TAG}"
           
-          echo "Tagging image: $FULL_IMAGE_URI"
-          docker tag etl "$FULL_IMAGE_URI"
-          
-          echo "Pushing image to ECR..."
-          docker push "$FULL_IMAGE_URI"
+          # Build and push the image in one step, embedding the CloudTAK capabilities
+          # manifest (capabilities.json) as the com.cloudtak.capabilities OCI annotation
+          # so CloudTAK can read it directly from ECR (see @tak-ps/etl's cloudtak-etl CLI)
+          echo "Building and pushing Docker image: $FULL_IMAGE_URI"
+          docker buildx build . \
+              --platform linux/amd64 \
+              --provenance=false \
+              --annotation "com.cloudtak.capabilities=$(jq -c . capabilities.json)" \
+              --output type=image,oci-mediatypes=true,push=true \
+              -t "$FULL_IMAGE_URI"
           
           echo "✅ Successfully deployed ETL image: $FULL_IMAGE_URI"
           echo ""
@@ -131,6 +135,9 @@ jobs:
       - name: Get tag
         id: tag
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -167,19 +174,20 @@ jobs:
           ECR_REPO_NAME=$(echo "$ECR_REPO_ARN" | cut -d'/' -f2)
           ECR_URI="${{ secrets.AWS_ACCOUNT_ID || secrets.PROD_AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION || secrets.PROD_AWS_REGION }}.amazonaws.com/${ECR_REPO_NAME}"
           
-          # Build Docker image
-          echo "Building Docker image..."
-          docker build -t etl .
-          
           # Tag image with ETL name and tag
           IMAGE_TAG="${ETL_NAME}-${TAG}"
           FULL_IMAGE_URI="${ECR_URI}:${IMAGE_TAG}"
           
-          echo "Tagging image: $FULL_IMAGE_URI"
-          docker tag etl "$FULL_IMAGE_URI"
-          
-          echo "Pushing image to ECR..."
-          docker push "$FULL_IMAGE_URI"
+          # Build and push the image in one step, embedding the CloudTAK capabilities
+          # manifest (capabilities.json) as the com.cloudtak.capabilities OCI annotation
+          # so CloudTAK can read it directly from ECR (see @tak-ps/etl's cloudtak-etl CLI)
+          echo "Building and pushing Docker image: $FULL_IMAGE_URI"
+          docker buildx build . \
+              --platform linux/amd64 \
+              --provenance=false \
+              --annotation "com.cloudtak.capabilities=$(jq -c . capabilities.json)" \
+              --output type=image,oci-mediatypes=true,push=true \
+              -t "$FULL_IMAGE_URI"
           
           echo "✅ Successfully deployed ETL image: $FULL_IMAGE_URI"
           echo ""

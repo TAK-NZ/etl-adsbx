@@ -1,0 +1,27 @@
+{
+    "version": "1.0",
+    "name": "ADS-B Exchange (NZ Public Safety)",
+    "description": "Ingests real-time ADS-B aircraft position data from ADSBExchange, with optional supplementary tar1090/ADSBX-compatible feeds, and posts aircraft tracks to the map, with special handling for NZ public safety aircraft.",
+    "compute": {
+        "memory": 1024,
+        "timeout": 120
+    },
+    "permissions": [
+        {
+            "resource": "feature:*",
+            "required": true,
+            "description": "Submits aircraft position CoT features to CloudTAK"
+        }
+    ],
+    "invocations": {
+        "incoming": {
+            "schedule": {
+                "description": "Polls ADSBExchange and any configured supplementary feeds for updated aircraft positions on a schedule.",
+                "default": {
+                    "enabled": true,
+                    "schedule": "rate(1 minute)"
+                }
+            }
+        }
+    }
+}

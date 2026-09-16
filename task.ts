@@ -204,6 +204,14 @@ const Env = Type.Object({
         description: 'Squawk code for firefighting aircraft. Aircraft with this squawk will be automatically classified as fire service.',
         default: '0111'
     }),
+    'ADSBX_Include_Below_Elevation': Type.Boolean({
+        description: 'When ADSBX_Filtering is enabled, additively include all aircraft below the elevation specified in ADSBX_Below_Elevation_Feet, regardless of the ADSBX_Includes list.',
+        default: false
+    }),
+    'ADSBX_Below_Elevation_Feet': Type.Number({
+        description: 'Elevation in feet below which aircraft are additively included when ADSBX_Include_Below_Elevation is enabled.',
+        default: 18000
+    }),
     'Supplementary_Feeds': Type.Array(Type.Object({
         url: Type.Optional(Type.String({ description: 'Supplementary feed URL. Supports tar1090 format (aircraft.json) and ADSBX-compatible APIs. Examples: http://feeder1/tar1090/data/aircraft.json or https://api.adsb.lol/v2/point/lat/lon/radius' }))
     }), { default: [] }),
@@ -241,6 +249,7 @@ interface AircraftData {
     group?: string;
     cot_type?: string;
     comments?: string;
+    included?: boolean;
 }
 
 // Define a more flexible schema for ADSBExchange API responses
@@ -426,6 +435,10 @@ const ADSBResponse = Type.Object({
     comments: Type.Optional(Type.String({
         default: '',
         description: 'Provided by the join with ADSBX_Includes items'
+    })),
+    included: Type.Optional(Type.Boolean({
+        default: false,
+        description: 'True if the aircraft matched the ADSBX_Includes list (by ICAO hex or registration), false otherwise'
     })),
 })
 
@@ -685,6 +698,8 @@ export default class Task extends ETL {
                 include = includesMap.get(ac.r.toLowerCase().trim());
             }
             
+            ac.included = !!include;
+
             if (include) {
                 if (include.group !== undefined) {
                     ac.group = include.group;
@@ -902,6 +917,8 @@ export default class Task extends ETL {
                     include = includesMap.get(ac.r.toLowerCase().trim());
                 }
                 
+                ac.included = !!include;
+
                 if (include) {
                     if (include.group !== undefined) {
                         ac.group = include.group;
@@ -1187,6 +1204,24 @@ export default class Task extends ETL {
                     }
                 }
             }
+
+            // Additively include any remaining aircraft below a configured elevation,
+            // regardless of whether they matched the ADSBX_Includes list. Useful for
+            // showing all low-flying traffic (e.g. near an airport) even when otherwise
+            // filtering down to a curated list of public safety aircraft.
+            if (env.ADSBX_Include_Below_Elevation) {
+                for (const [id, feat] of ids.entries()) {
+                    if (processedIds.has(id)) continue; // Skip already processed
+
+                    const ac = feat.properties.metadata;
+                    // ADS-B altitudes are reported in feet; alt_baro is the string "ground" when landed
+                    const alt = ac.alt_geom ?? ac.alt_baro;
+                    if (alt === 'ground' || (typeof alt === 'number' && alt < env.ADSBX_Below_Elevation_Feet)) {
+                        processedIds.add(id);
+                        features.push(feat);
+                    }
+                }
+            }
         } else {
             // When filtering is disabled, include all aircraft
             // Simply add all values from the ids Map to the features array
@@ -1210,10 +1245,10 @@ export default class Task extends ETL {
 }
 
 // For local development testing
-await local(new Task(import.meta.url), import.meta.url);
+await local(await Task.init(import.meta.url), import.meta.url);
 
 // AWS Lambda handler function
 export async function handler(event: Event = {}) {
-    return await internal(new Task(import.meta.url), event);
+    return await internal(await Task.init(import.meta.url), event);
 }
 
