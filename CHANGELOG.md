@@ -10,6 +10,10 @@
 
 ## Version History
 
+### v1.3.1
+
+- :bug: When `ADSBX_Filtering` is enabled, always additively include aircraft squawking an emergency status, regardless of `ADSBX_Includes` or `ADSBX_Include_Below_Elevation`. Previously an emergency aircraft outside the configured filtering scope was silently dropped before ever reaching CloudTAK, even though `ADSBX_Emergency_Alert` would have flagged it had it been included
+
 ### v1.3.0
 
 - :tada: Add `capabilities.json` manifest (validated against `@tak-ps/etl`'s `StaticCapabilitiesSchema`) describing this task's permissions, compute requirements and invocation modes, embedded in the pushed image as the `com.cloudtak.capabilities` OCI annotation via `docker buildx` in CI

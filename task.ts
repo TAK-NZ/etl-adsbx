@@ -1222,6 +1222,20 @@ export default class Task extends ETL {
                     }
                 }
             }
+
+            // Always additively include any remaining aircraft squawking an emergency
+            // status, regardless of the ADSBX_Includes list or elevation threshold.
+            // An aircraft in distress must never be silently dropped just because it
+            // falls outside the configured filtering scope.
+            for (const [id, feat] of ids.entries()) {
+                if (processedIds.has(id)) continue; // Skip already processed
+
+                const ac = feat.properties.metadata;
+                if (ac.emergency !== undefined && ac.emergency !== 'none') {
+                    processedIds.add(id);
+                    features.push(feat);
+                }
+            }
         } else {
             // When filtering is disabled, include all aircraft
             // Simply add all values from the ids Map to the features array
