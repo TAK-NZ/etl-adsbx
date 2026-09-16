@@ -10,6 +10,10 @@
 
 ## Version History
 
+### v1.4.0
+
+- :tada: Add `ADSBX_Include_FireFighting` option to additively include all aircraft squawking `ADSBX_FireFighting_Squawk` when `ADSBX_Filtering` is enabled, regardless of the `ADSBX_Includes` list. Without this, aircraft auto-classified as fire service via the squawk code were still dropped by filtering unless separately in `ADSBX_Includes` or below the elevation threshold
+
 ### v1.3.1
 
 - :bug: When `ADSBX_Filtering` is enabled, always additively include aircraft squawking an emergency status, regardless of `ADSBX_Includes` or `ADSBX_Include_Below_Elevation`. Previously an emergency aircraft outside the configured filtering scope was silently dropped before ever reaching CloudTAK, even though `ADSBX_Emergency_Alert` would have flagged it had it been included
