@@ -10,6 +10,10 @@
 
 ## Version History
 
+### v1.4.1
+
+- :bug: Set the CoT `stale` (timeout) offset explicitly to 60 seconds on every submitted feature. Previously `stale` was never set, so `@tak-ps/node-cot` fell back to its own default of just 20 seconds - too aggressive for our `rate(1 minute)` default polling schedule and prone to making aircraft flicker stale between updates on a TAK client
+
 ### v1.4.0
 
 - :tada: Add `ADSBX_Include_FireFighting` option to additively include all aircraft squawking `ADSBX_FireFighting_Squawk` when `ADSBX_Filtering` is enabled, regardless of the `ADSBX_Includes` list. Without this, aircraft auto-classified as fire service via the squawk code were still dropped by filtering unless separately in `ADSBX_Includes` or below the elevation threshold

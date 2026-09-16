@@ -22,6 +22,11 @@ const KNOTS_TO_MPS = 0.5144444;
 // Conversion factor from feet to meters
 const FEET_TO_METERS = 0.3048;
 
+// Default CoT stale/timeout offset in milliseconds. Without this, @tak-ps/node-cot
+// defaults to just 20 seconds, which is too aggressive for a 1-minute (or slower)
+// polling schedule and can cause aircraft to flicker stale between updates.
+const DEFAULT_COT_STALE_MS = 60 * 1000;
+
 /**
  * UUID and path for the Public Safety Air icon set in TAK
  * This is used to display specialized icons for different types of public safety aircraft
@@ -734,6 +739,7 @@ export default class Task extends ETL {
                 callsign: string;
                 time: Date;
                 start: Date;
+                stale: number;
                 speed: number;
                 course: number;
                 metadata: typeof ac;
@@ -791,6 +797,7 @@ export default class Task extends ETL {
                 callsign: (ac.flight || '').trim(),
                 time: new Date(Date.now() - (ac.seen_pos * 1000)),
                 start: new Date(Date.now() - (ac.seen_pos * 1000)),
+                stale: DEFAULT_COT_STALE_MS,
                 speed: (typeof ac.gs === 'number' ? ac.gs * KNOTS_TO_MPS : Number.NaN), // Use NaN for unknown speed per CoT spec
                 course: (typeof ac.track === 'number' ? ac.track : UNKNOWN_COURSE), // Use NaN for unknown course per CoT spec
                 metadata: ac,
@@ -948,6 +955,7 @@ export default class Task extends ETL {
                     callsign: string;
                     time: Date;
                     start: Date;
+                    stale: number;
                     speed: number;
                     course: number;
                     metadata: typeof ac;
@@ -1000,6 +1008,7 @@ export default class Task extends ETL {
                     callsign: (ac.flight || '').trim(),
                     time: new Date(Date.now() - ((ac.seen_pos || 0) * 1000)),
                     start: new Date(Date.now() - ((ac.seen_pos || 0) * 1000)),
+                    stale: DEFAULT_COT_STALE_MS,
                     speed: (typeof ac.gs === 'number' ? ac.gs * KNOTS_TO_MPS : Number.NaN),
                     course: (typeof ac.track === 'number' ? ac.track : UNKNOWN_COURSE),
                     metadata: ac,
