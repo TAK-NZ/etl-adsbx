@@ -10,6 +10,10 @@
 
 ## Version History
 
+### v1.4.0
+
+- :tada: Add `ADSBX_Include_FireFighting` option to additively include all aircraft squawking `ADSBX_FireFighting_Squawk` when `ADSBX_Filtering` is enabled, regardless of the `ADSBX_Includes` list. Without this, aircraft auto-classified as fire service via the squawk code were still dropped by filtering unless separately in `ADSBX_Includes` or below the elevation threshold
+
 ### v1.3.0
 
 - :tada: Add `capabilities.json` manifest (validated against `@tak-ps/etl`'s `StaticCapabilitiesSchema`) describing this task's permissions, compute requirements and invocation modes, embedded in the pushed image as the `com.cloudtak.capabilities` OCI annotation via `docker buildx` in CI

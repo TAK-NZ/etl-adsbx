@@ -200,6 +200,10 @@ const Env = Type.Object({
         description: 'ICAO HEX start value for domestic flights. E.g. AFFFFF for USA or C87FFF for NZ.', 
         default: 'C87FFF'
     }),
+    'ADSBX_Include_FireFighting': Type.Boolean({
+        description: 'When ADSBX_Filtering is enabled, additively include all aircraft squawking ADSBX_FireFighting_Squawk, regardless of the ADSBX_Includes list.',
+        default: false
+    }),
     'ADSBX_FireFighting_Squawk': Type.String({
         description: 'Squawk code for firefighting aircraft. Aircraft with this squawk will be automatically classified as fire service.',
         default: '0111'
@@ -1217,6 +1221,23 @@ export default class Task extends ETL {
                     // ADS-B altitudes are reported in feet; alt_baro is the string "ground" when landed
                     const alt = ac.alt_geom ?? ac.alt_baro;
                     if (alt === 'ground' || (typeof alt === 'number' && alt < env.ADSBX_Below_Elevation_Feet)) {
+                        processedIds.add(id);
+                        features.push(feat);
+                    }
+                }
+            }
+
+            // Additively include any remaining aircraft squawking the firefighting
+            // squawk code, regardless of whether they matched the ADSBX_Includes list.
+            // Without this, aircraft auto-classified as fire service via
+            // ADSBX_FireFighting_Squawk would still be dropped by filtering unless they
+            // were also separately in ADSBX_Includes or below the elevation threshold.
+            if (env.ADSBX_Include_FireFighting) {
+                for (const [id, feat] of ids.entries()) {
+                    if (processedIds.has(id)) continue; // Skip already processed
+
+                    const ac = feat.properties.metadata;
+                    if (ac.squawk && ac.squawk === env.ADSBX_FireFighting_Squawk) {
                         processedIds.add(id);
                         features.push(feat);
                     }

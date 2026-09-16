@@ -32,6 +32,7 @@ test('Incoming Input schema', async () => {
         'ADSBX_Ignore_Tower_Vehicles',
         'ADSBX_ICAOHex_Domestic_Start',
         'ADSBX_ICAOHex_Domestic_End',
+        'ADSBX_Include_FireFighting',
         'ADSBX_FireFighting_Squawk',
         'ADSBX_Include_Below_Elevation',
         'ADSBX_Below_Elevation_Feet',
@@ -49,6 +50,8 @@ test('Incoming Input schema', async () => {
     assert.equal(schema.properties.ADSBX_Include_Below_Elevation.default, false);
     assert.equal(schema.properties.ADSBX_Below_Elevation_Feet.type, 'number');
     assert.equal(schema.properties.ADSBX_Below_Elevation_Feet.default, 18000);
+    assert.equal(schema.properties.ADSBX_Include_FireFighting.type, 'boolean');
+    assert.equal(schema.properties.ADSBX_Include_FireFighting.default, false);
 });
 
 test('Incoming Output schema', async () => {
