@@ -21,11 +21,11 @@ permissions:
 
 jobs:
   build-and-validate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org/
@@ -52,22 +52,22 @@ jobs:
 
   deploy-to-demo:
     needs: build-and-validate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: demo
     env:
       STACK_NAME: ${{ vars.DEMO_STACK_NAME || 'Demo' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Get tag
         id: tag
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN || secrets.DEMO_AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION || secrets.DEMO_AWS_REGION }}
@@ -123,24 +123,24 @@ jobs:
 
   deploy-to-production:
     needs: build-and-validate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: production
     env:
       STACK_NAME: ${{ vars.PROD_STACK_NAME || 'Prod' }}
     # Manual approval required for production deployment
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Get tag
         id: tag
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN || secrets.PROD_AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION || secrets.PROD_AWS_REGION }}
