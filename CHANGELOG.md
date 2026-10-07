@@ -13,6 +13,7 @@
 ### v1.4.1
 
 - :bug: Set the CoT `stale` (timeout) offset explicitly to 60 seconds on every submitted feature. Previously `stale` was never set, so `@tak-ps/node-cot` fell back to its own default of just 20 seconds - too aggressive for our `rate(1 minute)` default polling schedule and prone to making aircraft flicker stale between updates on a TAK client
+- :rocket: Add a .dockerignore so .git, .github, node_modules, dist, test, docs, .agents, .env*, and markdown files are kept out of the image build context
 
 ### v1.4.0
 
