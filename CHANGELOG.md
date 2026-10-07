@@ -15,6 +15,7 @@
 - :bug: Set the CoT `stale` (timeout) offset explicitly to 60 seconds on every submitted feature. Previously `stale` was never set, so `@tak-ps/node-cot` fell back to its own default of just 20 seconds - too aggressive for our `rate(1 minute)` default polling schedule and prone to making aircraft flicker stale between updates on a TAK client
 - :arrow_up: Update GitHub Actions to releases that run on Node.js 24, clearing the Node.js 20 deprecation warnings: `actions/checkout` v7, `actions/setup-node` v7, `aws-actions/configure-aws-credentials` v6 and `docker/setup-buildx-action` v4. `aws-actions/amazon-ecr-login` v2 already runs on Node.js 24. Not yet run in CI on these versions
 - :rocket: Pin the workflow runners to `ubuntu-24.04` instead of `ubuntu-latest`, so the `ubuntu-latest` migration to Ubuntu 26 (starting October 19, 2026) does not change the build environment unannounced
+- :rocket: Add a .dockerignore so .git, .github, node_modules, dist, test, docs, .agents, .env*, and markdown files are kept out of the image build context
 
 ### v1.4.0
 
