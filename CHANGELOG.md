@@ -10,6 +10,10 @@
 
 ## Version History
 
+### v1.4.2
+- :arrow_up: Update `@tak-ps/etl` to `^11.4.0`. CloudTAK v14 requires ETLs to be on ETL-Base v11 or higher. v11 publishes Output schemas as named schemas, so this task needed no change for that, and the release also works with CloudTAK v13
+- :arrow_up: Update the other dependencies within their existing ranges, which clears the `npm audit --production` findings that the deploy workflow checks
+- :rocket: Remove the `glob` and `minimatch` overrides. They pinned vulnerable versions, and the updated dependencies no longer need them
 ### v1.4.1
 
 - :rocket: Add rescue helicopters ZK-IXV (Gisborne - Air 1 Tairawhiti), ZK-IID (Otago Rescue Helicopter), ZK-IXA, ZK-IXC, ZK-IXR (Search And Rescue Services H145s) and ZK-HLN (Auckland Rescue Helicopter), plus Life Flight King Airs ZK-LFM, ZK-LFT, ZK-LFW and Flying Doctors King Air ZK-FDC, to `NZ-PubSafety-Aircraft.csv`. ICAO hex codes were cross-checked against the NZ CAA aircraft register
