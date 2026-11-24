@@ -2,7 +2,7 @@
     "name": "etl-adsbx",
     "type": "module",
     "prviate": true,
-    "version": "1.4.1",
+    "version": "1.4.2",
     "description": "ETL for ADS-B data from ADSBExchange API",
     "main": "index.js",
     "scripts": {
@@ -26,10 +26,6 @@
     },
     "dependencies": {
         "@sinclair/typebox": "^0.34.52",
-        "@tak-ps/etl": "^10.13.0"
-    },
-    "overrides": {
-        "minimatch": "^10.0.0",
-        "glob": "^11.0.0"
+        "@tak-ps/etl": "^11.4.0"
     }
 }
